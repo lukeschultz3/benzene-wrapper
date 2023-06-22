@@ -4,7 +4,7 @@ main:
 	./wrapper
 
 wrapper:
-	g++ wrapper.cpp -o wrapper
+	g++ -std=c++11 wrapper.cpp -o wrapper
 
 clean:
 	rm -f wrapper

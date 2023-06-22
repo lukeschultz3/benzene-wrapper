@@ -14,7 +14,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 
-#define MAXLINE 120
+#define MAXLINE 240
 
 using namespace std;
 
@@ -66,13 +66,20 @@ int main() {
                 cout << strerror(errno) << endl;
             close(fd2[1]);
         }
+        
+        char *benzenePath = "/home/luke/benzene-vanilla-cmake/build/src/mohex/mohex";
+        if (execvp(benzenePath, NULL) < 0) {
+            cout << strerror(errno) << endl;
+        }
 
+        /*
         char *interpreter = "python3";
         char *pythonPath = "./test.py";
         char *pythonArgs[] = {interpreter, pythonPath, NULL};
         if (execvp(interpreter, pythonArgs) < 0) {
             cout << strerror(errno) << endl;
         }
+        */
 
         exit(0);
     }

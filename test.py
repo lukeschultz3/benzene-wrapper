@@ -3,7 +3,6 @@ A program for testing IPC
 """
 
 while True:
-    print("here")
+    #print("here")
     inp = input();
     print(inp)
-    exit()

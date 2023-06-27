@@ -13,8 +13,9 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <vector>
 
-#define MAXLINE 240
+#define MAXLINE 2000
 #define BLANK   0
 #define BLACK   1
 #define WHITE   2
@@ -86,48 +87,48 @@ void runParent() {
 bool* getMustplay(uint8_t size, uint8_t *board, bool blackToPlay) {
     // how to show terminal??
 
-    string line = "boardsize " + to_string(size);
-    cout << "printing line " << line << endl;
-    char* charLine = new char [line.length()+1];
-    strcpy(charLine, line.c_str());
-    if (write(fd1[1], charLine, line.length()+1) != line.length()+1)
-        cout << strerror(errno) << endl;
-    delete[] charLine;
-
+    vector <string> lines;
+    lines.push_back("boardsize " + to_string(size) + "\n");
     for (int i = 0; i < size * size; i++) {
         if (board[i] == BLANK) {
             continue;
         }
 
         if (board[i] == BLACK) {
-            line = "play b ";
-        } else if (board[i] == WHITE) {
-            line = "play w ";
+            lines.push_back("play b ");
+        } else {  // WHTIE
+            lines.push_back("play w ");
         }
+        lines[lines.size()-1] += (char) (i%6) + 97;
+        lines[lines.size()-1] += to_string((i/6)+1);
+        lines[lines.size()-1] += "\n";
+    }
+    lines.push_back("showboard\n");
 
-        // NOTE i / 6 is floor divide because c++ truncates int division
-        line += (char) (i%6)+97;
-        line += to_string((i/6)+1);
-        cout << line << endl;
-        charLine = new char [line.length()+1];
-        write(fd1[1], charLine, line.length()+1);
-        delete[] charLine;
-
+    if (blackToPlay) {
+        lines.push_back("vc-build b\n");
+    } else {
+        lines.push_back("vc-build w\n");
     }
 
-    line = "showboard";
-    charLine = new char [line.length()+1];
-    strcpy(charLine, line.c_str());
-    write(fd1[1], charLine, line.length()+1);
-    delete[] charLine;
-   
-    while (true) {
-        cout << "here" << endl;
-        char line2[MAXLINE];
-        if ((n = read(fd2[0], line2, MAXLINE)) < 0)
+
+    char line[MAXLINE];
+    for (int i = 0; i < lines.size(); i++) {
+        cout << lines[i] << endl;
+        strcpy(line, lines[i].c_str());
+        n = strlen(line);
+
+        if (write(fd1[1], line, n) != n)
             cout << strerror(errno) << endl;
-        line2[n] = 0;  // null terminate
-        if (fputs(line2, stdout) == EOF)
+        if ((n = read(fd2[0], line, MAXLINE)) < 0)
+            cout << strerror(errno) << endl;
+        if (n == 0) {
+            cout << strerror(errno) << endl;
+            break;
+        }
+
+        line[n] = 0; // null terminate
+        if (fputs(line, stdout) == EOF)
             cout << strerror(errno) << endl;
     }
 
@@ -146,5 +147,5 @@ int main() {
                        0, 0, 0, 2, 0, 0,
                        0, 0, 0, 0, 0, 0};
     getMustplay(6, board, true);
-    runParent();
+    //runParent();
 }

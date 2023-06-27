@@ -86,6 +86,9 @@ void runParent() {
 
 bool* getMustplay(uint8_t size, uint8_t *board, bool blackToPlay) {
     // how to show terminal??
+    
+    bool *mustplay = new bool[size * size];
+    memset(mustplay, 1, size*size);
 
     vector <string> lines;
     lines.push_back("boardsize " + to_string(size) + "\n");
@@ -93,6 +96,8 @@ bool* getMustplay(uint8_t size, uint8_t *board, bool blackToPlay) {
         if (board[i] == BLANK) {
             continue;
         }
+
+        mustplay[i] = false;
 
         if (board[i] == BLACK) {
             lines.push_back("play b ");
@@ -103,7 +108,7 @@ bool* getMustplay(uint8_t size, uint8_t *board, bool blackToPlay) {
         lines[lines.size()-1] += to_string((i/6)+1);
         lines[lines.size()-1] += "\n";
     }
-    lines.push_back("showboard\n");
+    //lines.push_back("showboard\n");
 
     if (blackToPlay) {
         lines.push_back("vc-build b\n");
@@ -114,7 +119,7 @@ bool* getMustplay(uint8_t size, uint8_t *board, bool blackToPlay) {
 
     char line[MAXLINE];
     for (int i = 0; i < lines.size(); i++) {
-        cout << lines[i] << endl;
+        cout << lines[i];
         strcpy(line, lines[i].c_str());
         n = strlen(line);
 
@@ -126,13 +131,28 @@ bool* getMustplay(uint8_t size, uint8_t *board, bool blackToPlay) {
             cout << strerror(errno) << endl;
             break;
         }
-
-        line[n] = 0; // null terminate
-        if (fputs(line, stdout) == EOF)
-            cout << strerror(errno) << endl;
     }
 
-    return (bool*) true;
+    // The parsing rule is as follows:
+    // Split by spaces, form contiguous pairs.
+    // The first element in a pair is a coordinate to be excluded.
+    // Every coordinate that isn’t excluded is the mustplay.
+    int index = 3;
+    bool coord = true;
+    while (index < n) {
+        if (line[index] == ' ') {
+            coord = !coord;
+            index++;
+        } else if (coord) {
+            int a = ((line[index]-97)) + ((line[index+1]-48)-1)*size;
+            mustplay[a] = false;
+            index += 2;
+        } else {
+            index++;
+        }
+    }
+
+    return mustplay;
 }
 
 
@@ -146,6 +166,10 @@ int main() {
                        0, 0, 0, 0, 0, 0,
                        0, 0, 0, 2, 0, 0,
                        0, 0, 0, 0, 0, 0};
-    getMustplay(6, board, true);
+    bool* mustplay = getMustplay(6, board, true);
+    for (int i = 0; i < 36; i++) {
+        cout << mustplay[i];
+    }
+    cout << endl;
     //runParent();
 }

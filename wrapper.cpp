@@ -84,10 +84,11 @@ void runParent() {
 
 }
 
-bool* getMustplay(uint8_t size, uint8_t *board, bool blackToPlay) {
+void getMustplay(uint8_t size, uint8_t *board, bool blackToPlay,
+                 bool* mustplay, bool &isTerminal, bool &blackWins) {
     // how to show terminal??
     
-    bool *mustplay = new bool[size * size];
+    //bool *mustplay = new bool[size * size];
     memset(mustplay, 1, size*size);
 
     vector <string> lines;
@@ -108,7 +109,6 @@ bool* getMustplay(uint8_t size, uint8_t *board, bool blackToPlay) {
         lines[lines.size()-1] += to_string((i/6)+1);
         lines[lines.size()-1] += "\n";
     }
-    //lines.push_back("showboard\n");
 
     if (blackToPlay) {
         lines.push_back("vc-build b\n");
@@ -152,13 +152,13 @@ bool* getMustplay(uint8_t size, uint8_t *board, bool blackToPlay) {
         }
     }
 
-    return mustplay;
+    //return mustplay;
 }
 
 
 int main() {
     initialize();
-    sleep(2);
+    //sleep(2);
 
     uint8_t board[] = {0, 0, 0, 0, 0, 0,
                        0, 0, 0, 1, 0, 0,
@@ -166,7 +166,10 @@ int main() {
                        0, 0, 0, 0, 0, 0,
                        0, 0, 0, 2, 0, 0,
                        0, 0, 0, 0, 0, 0};
-    bool* mustplay = getMustplay(6, board, true);
+    bool *mustplay = new bool[36];
+    bool isTerminal;
+    bool blackWins;
+    getMustplay(6, board, true, mustplay, isTerminal, blackWins);
     for (int i = 0; i < 36; i++) {
         cout << mustplay[i];
     }

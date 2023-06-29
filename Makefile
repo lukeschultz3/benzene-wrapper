@@ -7,4 +7,4 @@ wrapper:
 	g++ -std=c++11 wrapper.cpp main.cpp -o wrapper
 
 clean:
-	rm -f wrapper
+	rm -f wrapper default.log

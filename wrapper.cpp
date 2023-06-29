@@ -20,6 +20,8 @@
 #define BLACK   1
 #define WHITE   2
 
+#define VERBOSE true
+
 using namespace std;
 
 int n, fd1[2], fd2[2];
@@ -84,21 +86,39 @@ void runParent() {
 
 }
 
-void getMustplay(uint8_t size, uint8_t *board, bool blackToPlay,
-                 bool* mustplay, bool &isTerminal, bool &blackWins) {
-    // how to show terminal??
-    
-    //bool *mustplay = new bool[size * size];
-    memset(mustplay, 1, size*size);
+vector <bool> getMustplay(uint8_t sideLength, uint8_t *board,
+                          bool blackToPlay) {
+    /*
+     * Gets the mustplay from benzene for a given (square) board position
+     *
+     * Parameters:
+     *   uint8_t  sideLength:    Side length of the board.
+     *   uint8_t* board:         Array of size sideLength**2 representing
+     *                           the position.
+     *                           ASSUMES that 0 is BLANK, 1 is BLACK,
+     *                           and 2 is WHITE.
+     *                           To change this, change the macros
+     *   bool     blackToPlay:   True if black is to play.
+     *                           Determines which player to find mustplay for.
+     * 
+     * Returns:
+     *   vector <bool> mustplay: Array of size sideLength**2 where an element
+     *                           is true if it corresponds to a cell in the
+     *                           mustplay.
+     */
 
+    vector <bool> mustplay(sideLength*sideLength, true);
+
+    //========================================================================
+    // Generate commands
     vector <string> lines;
-    lines.push_back("boardsize " + to_string(size) + "\n");
-    for (int i = 0; i < size * size; i++) {
+    lines.push_back("boardsize " + to_string(sideLength) + "\n");
+    for (int i = 0; i < sideLength * sideLength; i++) {
         if (board[i] == BLANK) {
             continue;
         }
 
-        mustplay[i] = false;
+        mustplay[i] = false;  // can't play in tiled cells
 
         if (board[i] == BLACK) {
             lines.push_back("play b ");
@@ -115,16 +135,22 @@ void getMustplay(uint8_t size, uint8_t *board, bool blackToPlay,
     } else {
         lines.push_back("vc-build w\n");
     }
+    //========================================================================
 
-
+    //========================================================================
+    // Send commands
     char line[MAXLINE];
     for (int i = 0; i < lines.size(); i++) {
-        cout << lines[i];
+        if (VERBOSE)
+            cout << lines[i];
         strcpy(line, lines[i].c_str());
         n = strlen(line);
 
         if (write(fd1[1], line, n) != n)
             cout << strerror(errno) << endl;
+        // automatically overwrites benzene output because
+        // we only care about the output from the final command
+        // (vc-build)
         if ((n = read(fd2[0], line, MAXLINE)) < 0)
             cout << strerror(errno) << endl;
         if (n == 0) {
@@ -132,6 +158,7 @@ void getMustplay(uint8_t size, uint8_t *board, bool blackToPlay,
             break;
         }
     }
+    //========================================================================
 
     // The parsing rule is as follows:
     // Split by spaces, form contiguous pairs.
@@ -144,7 +171,7 @@ void getMustplay(uint8_t size, uint8_t *board, bool blackToPlay,
             coord = !coord;
             index++;
         } else if (coord) {
-            int a = ((line[index]-97)) + ((line[index+1]-48)-1)*size;
+            int a = ((line[index]-97)) + ((line[index+1]-48)-1)*sideLength;
             mustplay[a] = false;
             index += 2;
         } else {
@@ -152,8 +179,10 @@ void getMustplay(uint8_t size, uint8_t *board, bool blackToPlay,
         }
     }
 
-    //return mustplay;
+    return mustplay;
 }
+
+bool isTerminal ()
 
 
 int main() {
@@ -166,10 +195,7 @@ int main() {
                        0, 0, 0, 0, 0, 0,
                        0, 0, 0, 2, 0, 0,
                        0, 0, 0, 0, 0, 0};
-    bool *mustplay = new bool[36];
-    bool isTerminal;
-    bool blackWins;
-    getMustplay(6, board, true, mustplay, isTerminal, blackWins);
+    vector <bool> mustplay = getMustplay(6, board, true);
     for (int i = 0; i < 36; i++) {
         cout << mustplay[i];
     }

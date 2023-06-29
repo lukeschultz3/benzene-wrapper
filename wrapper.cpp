@@ -182,7 +182,77 @@ vector <bool> getMustplay(uint8_t sideLength, uint8_t *board,
     return mustplay;
 }
 
-bool isTerminal ()
+bool isTerminal (uint8_t sideLength, uint8_t *board, bool blackToPlay) {
+    /*
+     * Checks if there is a winning virtual connection for the current player
+     *
+     * Parameters:
+     *   uint8_t  sideLength:    Side length of the board.
+     *   uint8_t* board:         Array of size sideLength**2 representing
+     *                           the position.
+     *                           ASSUMES that 0 is BLANK, 1 is BLACK,
+     *                           and 2 is WHITE.
+     *                           To change this, change the macros
+     *   bool     blackToPlay:   True if black is to play.
+     *                           Determines which player to find mustplay for.
+     * 
+     * Returns:
+     *   bool     isTerminal:    True if there is a winning VC for the player
+     */
+
+    //========================================================================
+    // Generate commands
+    vector <string> lines;
+    lines.push_back("boardsize " + to_string(sideLength) + "\n");
+    for (int i = 0; i < sideLength * sideLength; i++) {
+        if (board[i] == BLANK) {
+            continue;
+        }
+
+        if (board[i] == BLACK) {
+            lines.push_back("play b ");
+        } else {  // WHTIE
+            lines.push_back("play w ");
+        }
+        lines[lines.size()-1] += (char) (i%6) + 97;
+        lines[lines.size()-1] += to_string((i/6)+1);
+        lines[lines.size()-1] += "\n";
+    }
+
+    if (blackToPlay) {
+        lines.push_back("vc-build b\n");
+        lines.push_back("vc-between-cells-full b north south");
+    } else {
+        lines.push_back("vc-build w\n");
+        lines.push_back("vc-between-cells-full w east west");
+    }
+    //========================================================================
+
+    //========================================================================
+    // Send commands
+    char line[MAXLINE];
+    for (int i = 0; i < lines.size(); i++) {
+        if (VERBOSE)
+            cout << lines[i];
+        strcpy(line, lines[i].c_str());
+        n = strlen(line);
+
+        if (write(fd1[1], line, n) != n)
+            cout << strerror(errno) << endl;
+        // automatically overwrites benzene output because
+        // we only care about the output from the final command
+        // (vc-between-cells-full)
+        if ((n = read(fd2[0], line, MAXLINE)) < 0)
+            cout << strerror(errno) << endl;
+        if (n == 0) {
+            cout << strerror(errno) << endl;
+            break;
+        }
+    }
+    //========================================================================
+
+    cout << "n: " << n << endl;
+}
 
 
 int main() {

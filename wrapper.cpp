@@ -122,8 +122,8 @@ vector <bool> getMustplay(uint8_t sideLength, uint8_t *board,
         } else {  // WHTIE
             lines.push_back("play w ");
         }
-        lines[lines.size()-1] += (char) (i%6) + 97;
-        lines[lines.size()-1] += to_string((i/6)+1);
+        lines[lines.size()-1] += (char) (i%sideLength) + 97;
+        lines[lines.size()-1] += to_string((i/sideLength)+1);
         lines[lines.size()-1] += "\n";
     }
 
@@ -211,8 +211,8 @@ bool isTerminal(uint8_t sideLength, uint8_t *board, bool blackToPlay) {
         } else {  // WHTIE
             lines.push_back("play w ");
         }
-        lines[lines.size()-1] += (char) (i%6) + 97;
-        lines[lines.size()-1] += to_string((i/6)+1);
+        lines[lines.size()-1] += (char) (i%sideLength) + 97;
+        lines[lines.size()-1] += to_string((i/sideLength)+1);
         lines[lines.size()-1] += "\n";
     }
 

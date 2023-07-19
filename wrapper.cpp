@@ -183,7 +183,8 @@ vector <bool> getMustplay(uint8_t sideLength, uint8_t *board,
 void getMustplayAndFillin(uint8_t sideLength, uint8_t *board, uint8_t *fillin,
                           bool* mustplay, bool blackToPlay) {
     /*
-     * Gets the mustplay from benzene for a given (square) board position
+     * Gets the mustplay, and a filled in position from benzene
+     * for a given (square) board position
      *
      * Parameters:
      *   uint8_t  sideLength:    Side length of the board.
@@ -206,9 +207,6 @@ void getMustplayAndFillin(uint8_t sideLength, uint8_t *board, uint8_t *fillin,
      *                           Determines which player to find mustplay for.
      * 
      */
-
-    //vector <bool> mustplay(sideLength*sideLength, true);
-    //vector <uint8_t> fillin(sideLength*sideLength, BLANK);
 
     //========================================================================
     // Generate commands

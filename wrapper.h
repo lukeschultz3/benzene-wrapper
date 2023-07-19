@@ -16,5 +16,7 @@
 void initialize(std::string);
 void runParent();
 std::vector<bool> getMustplay(uint8_t, uint8_t*, bool);
+std::vector<bool> getMustplayAndFillin(uint8_t, uint8_t*, uint8_t,
+                                       bool*, bool);
 bool isTerminal(uint8_t, uint8_t*, bool);
 void runTests();

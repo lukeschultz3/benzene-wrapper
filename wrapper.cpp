@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <string.h>
 #include <vector>
+#include <cassert>
 
 #define MAXLINE 2000
 #define BLANK   0
@@ -177,6 +178,118 @@ vector <bool> getMustplay(uint8_t sideLength, uint8_t *board,
     }
 
     return mustplay;
+}
+
+void getMustplayAndFillin(uint8_t sideLength, uint8_t *board, uint8_t *fillin,
+                          bool* mustplay, bool blackToPlay) {
+    /*
+     * Gets the mustplay from benzene for a given (square) board position
+     *
+     * Parameters:
+     *   uint8_t  sideLength:    Side length of the board.
+     * 
+     *   uint8_t* board:         Array of size sideLength**2 representing
+     *                           the position.
+     *                           ASSUMES that 0 is BLANK, 1 is BLACK,
+     *                           and 2 is WHITE.
+     *                           To change this, change the macros
+     * 
+     *   uint8_t* fillin:        Array of size sideLength**2 that will
+     *                           contain the position as well as the fillins.
+     * 
+     *   bool*    mustplay:      Array of size sideLength**2 that will be
+     *                           filled with the mustplay. An element will
+     *                           be true if it corresponds to a cell in the
+     *                           mustplay.
+     * 
+     *   bool     blackToPlay:   True if black is to play.
+     *                           Determines which player to find mustplay for.
+     * 
+     */
+
+    //vector <bool> mustplay(sideLength*sideLength, true);
+    //vector <uint8_t> fillin(sideLength*sideLength, BLANK);
+
+    //========================================================================
+    // Generate commands
+    vector <string> lines;
+    lines.push_back("boardsize " + to_string(sideLength) + "\n");
+    for (int i = 0; i < sideLength * sideLength; i++) {
+        if (board[i] == BLANK) {
+            continue;
+        }
+
+        mustplay[i] = false;  // can't play in tiled cells
+        fillin[i] = board[i];
+
+        if (board[i] == BLACK) {
+            lines.push_back("play b ");
+        } else {  // WHTIE
+            lines.push_back("play w ");
+        }
+        lines[lines.size()-1] += (char) (i%sideLength) + 97;
+        lines[lines.size()-1] += to_string((i/sideLength)+1);
+        lines[lines.size()-1] += "\n";
+    }
+
+    if (blackToPlay) {
+        lines.push_back("vc-build b\n");
+    } else {
+        lines.push_back("vc-build w\n");
+    }
+    //========================================================================
+
+    //========================================================================
+    // Send commands
+    char line[MAXLINE];
+    for (int i = 0; i < lines.size(); i++) {
+        if (VERBOSE)
+            cout << lines[i];
+        strcpy(line, lines[i].c_str());
+        n = strlen(line);
+
+        if (write(fd1[1], line, n) != n)
+            cout << strerror(errno) << endl;
+        // automatically overwrites benzene output because
+        // we only care about the output from the final command
+        // (vc-build)
+        if ((n = read(fd2[0], line, MAXLINE)) < 0)
+            cout << strerror(errno) << endl;
+        if (n == 0) {
+            cout << strerror(errno) << endl;
+            break;
+        }
+    }
+    //========================================================================
+
+    // The parsing rule is as follows:
+    // Split by spaces, form contiguous pairs.
+    // The first element in a pair is a coordinate to be excluded.
+    // Every coordinate that isn’t excluded is the mustplay.
+    // 
+    // Additionally, if a coordinate is followed by fb or fw then it
+    // is a fillin
+    int index = 3;
+    int currentCoord = NULL;
+    bool coord = true;
+    while (index < n) {
+        if (line[index] == ' ') {
+            coord = !coord;
+        } else if (coord) {
+            currentCoord = ((line[index]-97)) + ((line[index+1]-48)-1)
+                            * sideLength;
+            mustplay[currentCoord] = false;
+            index++;  // extra increment to skip next character
+        } else if (!coord && line[index] == 'f') {
+            if (line[index+1] == 'b') {
+                fillin[currentCoord] = BLACK;
+            } else if (line[index+1] == 'w') {
+                fillin[currentCoord] = WHITE;
+            }
+        }
+
+        index++;
+    }
 }
 
 bool isTerminal(uint8_t sideLength, uint8_t *board, bool blackToPlay) {

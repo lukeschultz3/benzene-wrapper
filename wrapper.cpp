@@ -218,10 +218,10 @@ bool isTerminal(uint8_t sideLength, uint8_t *board, bool blackToPlay) {
 
     if (blackToPlay) {
         lines.push_back("vc-build b\n");
-        lines.push_back("vc-between-cells-full b north south\n");
+        lines.push_back("vc-between-cells-semi b north south\n");
     } else {
         lines.push_back("vc-build w\n");
-        lines.push_back("vc-between-cells-full w east west\n");
+        lines.push_back("vc-between-cells-semi w east west\n");
     }
     //========================================================================
 
